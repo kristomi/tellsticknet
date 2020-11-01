@@ -1,26 +1,13 @@
-FROM python:3.7-slim-stretch
+FROM molobrakos/tellsticknet
+ENV LANG C.UTF-8
+RUN apt-get install -y bashio
 
-WORKDIR /app
+LABEL io.hass.version="VERSION" io.hass.type="addon" io.hass.arch="armhf|aarch64|i386|amd64"
 
-RUN set -x \
-&& apt-get update \
-&& apt-get -y --no-install-recommends install dumb-init libsodium18 \
-&& apt-get -y autoremove \
-&& apt-get -y clean \
-&& rm -rf /var/lib/apt/lists/* \
-&& rm -rf /tmp/* \
-&& rm -rf /var/tmp/* \
-&& useradd -M --home-dir /app tellstick \
-  ;
+# Copy data for add-on
+COPY /config/tellsticknet/tellsticknet.conf /tellsticknet/tellsticknet.conf
 
-COPY requirements.txt ./
+COPY run.sh /
+RUN chmod a+x /run.sh
 
-RUN pip --no-cache-dir --trusted-host pypi.org install --upgrade -r requirements.txt pip coloredlogs libnacl \
-  && rm requirements.txt \
-  ;
-
-USER tellstick
-
-COPY . ./
-
-ENTRYPOINT ["dumb-init", "--", "python3", "-m", "tellsticknet", "mqtt"]
+CMD [ "/run.sh" ]
